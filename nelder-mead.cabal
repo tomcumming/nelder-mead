@@ -1,0 +1,26 @@
+cabal-version:      3.4
+name:               nelder-mead
+version:            0.0.0.1
+license:            MIT
+license-file:       LICENSE
+author:             Tom Cumming
+maintainer:         mail@tomcumming.co.uk
+category:           Math
+
+common shared
+    ghc-options: -Wall
+    default-language: GHC2021
+    default-extensions: MultiWayIf
+    build-depends:    base ^>=4.16.4.0, vector, containers
+
+library
+    import:           shared
+    exposed-modules:  Math.NelderMead
+    hs-source-dirs:   src
+
+test-suite nelder-mead-test
+    import:           shared
+    type:             exitcode-stdio-1.0
+    hs-source-dirs:   test
+    main-is:          Main.hs
+    build-depends:    nelder-mead
