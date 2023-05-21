@@ -10,12 +10,12 @@ category:           Math
 common shared
     ghc-options: -Wall
     default-language: GHC2021
-    default-extensions: MultiWayIf
-    build-depends:    base ^>=4.16.4.0, vector, containers
+    default-extensions: TypeFamilies, DataKinds, MultiWayIf
+    build-depends:    base ^>=4.16.4.0, semigroupoids, sized, type-natural, vector, containers
 
 library
     import:           shared
-    exposed-modules:  Math.NelderMead
+    exposed-modules:  Math.NelderMead, Math.NelderMead.Point, Math.NelderMead.Simplex
     hs-source-dirs:   src
 
 test-suite nelder-mead-test
