@@ -2,6 +2,7 @@ module Math.NelderMead.Simplex
   ( Simplex',
     Simplex,
     fromPoints,
+    fromPoint,
     pointsList,
     insert,
     takeWorst,
@@ -16,8 +17,9 @@ import Data.List.NonEmpty qualified as NE
 import Data.Map qualified as M
 import Data.Maybe (fromMaybe)
 import Data.Sized (Sized)
+import Data.Sized qualified as Sized
 import Data.Type.Natural (Succ)
-import Data.Vector (Vector)
+import Data.Vector (Vector, imap)
 import GHC.TypeLits (KnownNat)
 import Math.NelderMead.Point (Point (..))
 import Math.NelderMead.Point qualified as P
@@ -40,6 +42,21 @@ fromPoints errFn =
     . M.fromListWith (<>)
     . map (\p -> (errFn p, NE.singleton p))
     . toList
+
+-- | Create a Simplex from a point by extending by offset in each dimension
+fromPoint ::
+  (Ord e, Num a, KnownNat n, KnownNat (Succ n)) =>
+  (Point n a -> e) ->
+  Point n a ->
+  a ->
+  Simplex n e a
+fromPoint errFn (Point p) offset = fromPoints errFn (Sized.unsafeFromList' ps)
+  where
+    ps =
+      Point p : do
+        idx <- [0 .. Sized.length p - 1]
+        let p' = imap (\i x -> x + if i == idx then offset else 0) $ Sized.unsized p
+        [Point $ Sized.unsafeToSized' p']
 
 pointsList :: Simplex' (Succ d) n e a -> NE.NonEmpty (Point n a)
 pointsList (Simplex' s) =
