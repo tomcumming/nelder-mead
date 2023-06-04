@@ -19,8 +19,9 @@ import Data.Map qualified as M
 import Data.Maybe (fromMaybe)
 import Data.Sized (Sized)
 import Data.Sized qualified as Sized
-import Data.Type.Natural (Succ, sNat, sSucc)
-import Data.Vector (Vector, imap)
+import Data.Type.Natural (Succ)
+import Data.Type.Ordinal (Ordinal)
+import Data.Vector (Vector)
 import GHC.TypeLits (KnownNat)
 import Math.NelderMead.Point (Point (..))
 import Math.NelderMead.Point qualified as P
@@ -52,14 +53,18 @@ fromPoint ::
   Point n a ->
   a ->
   Simplex n e a
-fromPoint errFn (Point p) offset = fromPoints errFn (Sized.unsafeFromList (sSucc $ sNat @n) ps)
+fromPoint errFn (Point p) offset = fromPoints errFn $ Sized.snoc newPs (Point p)
   where
-    -- TODO we dont need unsafe here
-    ps =
-      Point p : do
-        idx <- [0 .. Sized.length p - 1]
-        let p' = imap (\i x -> x + if i == idx then offset else 0) $ Sized.unsized p
-        [Point $ Sized.unsafeToSized' p']
+    newPs :: Sized Vector n (Point n a)
+    newPs =
+      Sized.generate'
+        ( \(pIdx :: Ordinal n) ->
+            Point $
+              Sized.generate'
+                ( \(idx :: Ordinal n) ->
+                    (p Sized.%!! idx) + if pIdx == idx then offset else 0
+                )
+        )
 
 pointsList :: Simplex' (Succ d) n e a -> NE.NonEmpty (Point n a)
 pointsList (Simplex' s) =
