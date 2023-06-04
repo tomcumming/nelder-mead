@@ -12,4 +12,4 @@ main = do
   -- let p :: Point 2 Float = Point $ Sized.unsafeFromList' [10, 10]
   let p :: Point 2 Float = Point $ Sized.unsafeFromList' [0, 0]
   let s = S.fromPoint errFn p 1
-  mapM_ print $ take 30 $ nelderMead errFn s
+  mapM_ print $ take 30 $ nelderMead id errFn s

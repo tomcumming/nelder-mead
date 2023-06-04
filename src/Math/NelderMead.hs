@@ -23,10 +23,11 @@ data Step
 
 nelderMead ::
   (KnownNat (Succ n), Ord a, Fractional a, Ord e) =>
+  (Point (Succ n) a -> Point (Succ n) a) ->
   (Point (Succ n) a -> e) ->
   Simplex (Succ n) e a ->
   [(Step, Simplex (Succ n) e a)]
-nelderMead errFn s
+nelderMead normalise errFn s
   -- Only evaluate extended if reflected is already best
   | reflectedErr < S.bestError bestPts && extendedErr < reflectedErr =
       stepWith Extend extendedErr extended
@@ -34,19 +35,21 @@ nelderMead errFn s
       stepWith Reflect reflectedErr reflected
   | innerErr < S.worstError bestPts = stepWith (Contract Inner) innerErr inner
   | outerErr < S.worstError bestPts = stepWith (Contract Outer) outerErr outer
-  | otherwise = let s' = S.shrink s in (Shrink, s') : nelderMead errFn s'
+  | otherwise =
+      let s' = S.shrink normalise s
+       in (Shrink, s') : nelderMead normalise errFn s'
   where
     (_, worstPt, bestPts) = S.takeWorst s
 
     stepWith st err pt =
       let s' = S.insert pt err bestPts
-       in (st, s') : nelderMead errFn s'
+       in (st, s') : nelderMead normalise errFn s'
 
     bestPtsCntr = P.centroid (S.pointsList bestPts)
     toCentroid = P.add bestPtsCntr (P.scale (-1) worstPt)
 
     scaleAndScore k =
-      let p = P.add worstPt (P.scale k toCentroid)
+      let p = normalise $ P.add worstPt (P.scale k toCentroid)
        in (p, errFn p)
 
     (reflected, reflectedErr) = scaleAndScore 2

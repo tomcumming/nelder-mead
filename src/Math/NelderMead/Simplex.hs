@@ -92,8 +92,12 @@ worstError (Simplex' s) = case M.maxViewWithKey s of
   Nothing -> error simplexNotEmptyMsg
   Just ((e, _), _) -> e
 
-shrink :: (KnownNat n, Ord a, Fractional a) => Simplex' (Succ d) n e a -> Simplex' (Succ d) n e a
-shrink (Simplex' s) = Simplex' $ fmap scaleTowardBest <$> s
+shrink ::
+  (KnownNat n, Ord a, Fractional a) =>
+  (Point n a -> Point n a) ->
+  Simplex' (Succ d) n e a ->
+  Simplex' (Succ d) n e a
+shrink normalise (Simplex' s) = Simplex' $ fmap scaleTowardBest <$> s
   where
     bestPoint =
       P.centroid
@@ -103,4 +107,4 @@ shrink (Simplex' s) = Simplex' $ fmap scaleTowardBest <$> s
 
     scaleTowardBest p =
       let dir = P.add bestPoint (P.scale (-1) p)
-       in P.add p (P.scale 0.5 dir)
+       in normalise $ P.add p (P.scale 0.5 dir)
