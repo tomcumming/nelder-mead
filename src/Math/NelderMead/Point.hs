@@ -8,7 +8,7 @@ import Data.Vector (Vector)
 import GHC.TypeLits (KnownNat)
 import Prelude hiding (replicate)
 
-newtype Point n a = Point (Sized Vector n a) deriving (Show, Foldable, Functor)
+newtype Point n a = Point {unPoint :: Sized Vector n a} deriving (Show, Foldable, Functor)
 
 zero :: forall n a. (KnownNat n, Num a) => Point n a
 zero = Point $ Sized.replicate' 0

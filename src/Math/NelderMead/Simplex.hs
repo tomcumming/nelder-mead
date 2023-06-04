@@ -19,7 +19,7 @@ import Data.Map qualified as M
 import Data.Maybe (fromMaybe)
 import Data.Sized (Sized)
 import Data.Sized qualified as Sized
-import Data.Type.Natural (Succ)
+import Data.Type.Natural (Succ, sNat, sSucc)
 import Data.Vector (Vector, imap)
 import GHC.TypeLits (KnownNat)
 import Math.NelderMead.Point (Point (..))
@@ -46,13 +46,15 @@ fromPoints errFn =
 
 -- | Create a Simplex from a point by extending by offset in each dimension
 fromPoint ::
-  (Ord e, Num a, KnownNat n, KnownNat (Succ n)) =>
+  forall n a e.
+  (Ord e, Num a, KnownNat n) =>
   (Point n a -> e) ->
   Point n a ->
   a ->
   Simplex n e a
-fromPoint errFn (Point p) offset = fromPoints errFn (Sized.unsafeFromList' ps)
+fromPoint errFn (Point p) offset = fromPoints errFn (Sized.unsafeFromList (sSucc $ sNat @n) ps)
   where
+    -- TODO we dont need unsafe here
     ps =
       Point p : do
         idx <- [0 .. Sized.length p - 1]

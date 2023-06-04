@@ -11,11 +11,21 @@ common shared
     ghc-options: -Wall
     default-language: GHC2021
     default-extensions: TypeFamilies, DataKinds, MultiWayIf
-    build-depends:    base ^>=4.16.4.0, semigroupoids, sized, type-natural, vector, containers
+    build-depends:    
+        base ^>=4.16.4.0,
+        semigroupoids,
+        sized,
+        type-natural,
+        vector,
+        containers
 
 library
     import:           shared
-    exposed-modules:  Math.NelderMead, Math.NelderMead.Point, Math.NelderMead.Simplex
+    exposed-modules:
+        Math.NelderMead
+        Math.NelderMead.Point
+        Math.NelderMead.Simplex
+        Math.NelderMead.Unsized
     hs-source-dirs:   src
 
 test-suite nelder-mead-test
