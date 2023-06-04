@@ -7,6 +7,7 @@ module Math.NelderMead.Simplex
     insert,
     takeWorst,
     bestError,
+    bestPoint,
     worstError,
     shrink,
   )
@@ -87,6 +88,11 @@ bestError (Simplex' s) = case M.minViewWithKey s of
   Nothing -> error simplexNotEmptyMsg
   Just ((e, _), _) -> e
 
+bestPoint :: Simplex' (Succ d) n e a -> Point n a
+bestPoint (Simplex' s) = case M.minViewWithKey s of
+  Nothing -> error simplexNotEmptyMsg
+  Just ((_, p), _) -> NE.head p
+
 worstError :: Simplex' (Succ d) n e a -> e
 worstError (Simplex' s) = case M.maxViewWithKey s of
   Nothing -> error simplexNotEmptyMsg
@@ -99,12 +105,6 @@ shrink ::
   Simplex' (Succ d) n e a
 shrink normalise (Simplex' s) = Simplex' $ fmap scaleTowardBest <$> s
   where
-    bestPoint =
-      P.centroid
-        . fst
-        . fromMaybe (error simplexNotEmptyMsg)
-        $ M.minView s
-
     scaleTowardBest p =
-      let dir = P.add bestPoint (P.scale (-1) p)
+      let dir = P.add (bestPoint $ Simplex' s) (P.scale (-1) p)
        in normalise $ P.add p (P.scale 0.5 dir)
