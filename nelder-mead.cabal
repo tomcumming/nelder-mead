@@ -1,6 +1,6 @@
 cabal-version:      3.4
 name:               nelder-mead
-version:            0.0.0.1
+version:            1.0.0.0
 license:            MIT
 license-file:       LICENSE
 author:             Tom Cumming
@@ -10,14 +10,11 @@ category:           Math
 common shared
     ghc-options: -Wall
     default-language: GHC2021
-    default-extensions: TypeFamilies, DataKinds, MultiWayIf
+    default-extensions: FunctionalDependencies
     build-depends:    
-        base ^>=4.16.4.0,
-        semigroupoids,
-        sized,
-        type-natural,
-        vector,
-        containers
+        base,
+        containers,
+        semigroupoids
 
 library
     import:           shared
@@ -25,7 +22,6 @@ library
         Math.NelderMead
         Math.NelderMead.Point
         Math.NelderMead.Simplex
-        Math.NelderMead.Unsized
     hs-source-dirs:   src
 
 test-suite nelder-mead-test

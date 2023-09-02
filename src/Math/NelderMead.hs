@@ -1,12 +1,11 @@
 module Math.NelderMead
-  ( nelderMead,
+  ( step,
+    nelderMead,
     ContractionSide (..),
     Step (..),
   )
 where
 
-import Data.Type.Natural (Succ)
-import GHC.TypeLits (KnownNat)
 import Math.NelderMead.Point (Point)
 import Math.NelderMead.Point qualified as P
 import Math.NelderMead.Simplex (Simplex)
@@ -22,37 +21,47 @@ data Step
   deriving (Show)
 
 nelderMead ::
-  (KnownNat (Succ n), Ord a, Fractional a, Ord e) =>
-  (Point (Succ n) a -> Point (Succ n) a) ->
-  (Point (Succ n) a -> e) ->
-  Simplex (Succ n) e a ->
-  [(Step, Simplex (Succ n) e a)]
-nelderMead normalise errFn s
-  -- Only evaluate extended if reflected is already best
-  | reflectedErr < S.bestError bestPts && extendedErr < reflectedErr =
-      stepWith Extend extendedErr extended
-  | reflectedErr < S.worstError bestPts =
-      stepWith Reflect reflectedErr reflected
-  | innerErr < S.worstError bestPts = stepWith (Contract Inner) innerErr inner
-  | outerErr < S.worstError bestPts = stepWith (Contract Outer) outerErr outer
-  | otherwise =
-      let s' = S.shrink normalise s
-       in (Shrink, s') : nelderMead normalise errFn s'
-  where
-    (_, worstPt, bestPts) = S.takeWorst s
+  (Point s p, Fractional s, Ord s) =>
+  (p -> p) ->
+  (p -> s) ->
+  Simplex s p ->
+  [(Step, Simplex s p)]
+nelderMead norm score s =
+  let (st, s') = step norm score s
+   in (st, s') : nelderMead norm score s'
 
-    stepWith st err pt =
-      let s' = S.insert pt err bestPts
-       in (st, s') : nelderMead normalise errFn s'
+step ::
+  (Point s p, Fractional s, Ord s) =>
+  (p -> p) ->
+  (p -> s) ->
+  Simplex s p ->
+  (Step, Simplex s p)
+step normalise scoreFn s
+  -- Only evaluate extended if reflected is already best
+  | reflectedScore < S.bestScore bestPts && extendedScore < reflectedScore =
+      stepWith Extend extendedScore extended
+  | reflectedScore < S.worstScore bestPts =
+      stepWith Reflect reflectedScore reflected
+  | innerScore < S.worstScore bestPts =
+      stepWith (Contract Inner) innerScore inner
+  | outerScore < S.worstScore bestPts =
+      stepWith (Contract Outer) outerScore outer
+  | otherwise = (Shrink, S.shrink normalise s)
+  where
+    (worstPt, bestPts) = case S.takeWorst s of
+      (_, worstPt', Just bestPts') -> (worstPt', bestPts')
+      _ -> error "You need at least two points to run nelderMead"
+
+    stepWith st score pt = (st, S.insert pt score bestPts)
 
     bestPtsCntr = P.centroid (S.pointsList bestPts)
     toCentroid = P.add bestPtsCntr (P.scale (-1) worstPt)
 
     scaleAndScore k =
       let p = normalise $ P.add worstPt (P.scale k toCentroid)
-       in (p, errFn p)
+       in (p, scoreFn p)
 
-    (reflected, reflectedErr) = scaleAndScore 2
-    (extended, extendedErr) = scaleAndScore 3
-    (inner, innerErr) = scaleAndScore 0.5
-    (outer, outerErr) = scaleAndScore 1.5
+    (reflected, reflectedScore) = scaleAndScore 2
+    (extended, extendedScore) = scaleAndScore 3
+    (inner, innerScore) = scaleAndScore 0.5
+    (outer, outerScore) = scaleAndScore 1.5
